@@ -130,7 +130,7 @@ public class SimpleEventBus implements EventBus {
 
             try {
                 WrappedListener wrappedListener = wrappedListenerFactory.create(listener, method, eventType);
-                RegisteredListener registeredListener = new RegisteredListener(wrappedListener, listener, eventType, anno.receiveCancelled(), anno.order());
+                RegisteredListener registeredListener = new RegisteredListener(wrappedListener, listener, method, eventType, anno.receiveCancelled(), anno.order());
                 listenerExecutors.add(registeredListener);
                 addEventListener(eventType, registeredListener);
             } catch (Exception e) {
