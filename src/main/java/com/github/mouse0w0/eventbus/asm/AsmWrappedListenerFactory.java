@@ -41,8 +41,7 @@ public final class AsmWrappedListenerFactory implements WrappedListenerFactory {
         FieldVisitor fv;
         MethodVisitor mv;
 
-        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, className, null,
-                wrappedListenerTypeName, null);
+        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, className, null, "java/lang/Object", new String[] {wrappedListenerTypeName});
 
         cw.visitSource(".dynamic", null);
 
@@ -54,7 +53,8 @@ public final class AsmWrappedListenerFactory implements WrappedListenerFactory {
             mv = cw.visitMethod(ACC_PUBLIC, "<init>",
                     "(" + ownerDesc + ")V",
                     "(" + ownerDesc + ")V", null);
-            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitFieldInsn(PUTFIELD, className, "owner", ownerDesc);
@@ -64,7 +64,6 @@ public final class AsmWrappedListenerFactory implements WrappedListenerFactory {
         }
         {
             mv = cw.visitMethod(ACC_PUBLIC, "post", "(" + eventTypeDesc + ")V", null, new String[]{"java/lang/Exception"});
-            mv.visitCode();
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, className, "owner", ownerDesc);
             mv.visitVarInsn(ALOAD, 1);
