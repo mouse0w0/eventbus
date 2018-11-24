@@ -2,6 +2,9 @@ package com.github.mouse0w0.eventbus;
 
 import java.lang.reflect.Type;
 
+/**
+ * Every generic event class should implement this interface.
+ */
 public interface GenericEvent<T> extends Event {
 
     Type getGenericType();
