@@ -84,7 +84,13 @@ public class SimpleEventBus implements EventBus {
 
     protected void post(RegisteredListener listener, Event event) {
         try {
-            listener.post(event);
+            if (event instanceof GenericEvent && listener.isGeneric()) {
+                if (((GenericEvent) event).getGenericType() == listener.getGenericType()) {
+                    listener.post(event);
+                }
+            } else {
+                listener.post(event);
+            }
         } catch (Exception e) {
             handleListenerException(listener, event, e);
         }
@@ -113,19 +119,16 @@ public class SimpleEventBus implements EventBus {
             int modifiers = method.getModifiers();
 
             if (!Modifier.isPublic(modifiers) || Modifier.isStatic(modifiers) || Modifier.isAbstract(modifiers)) {
-                //getLogger().warn("Require event bus listened method is public and not static/abstract! " + clazz); // TODO: support static
-                continue;
+                throw new EventException(String.format("Require event bus listened method is public and not static/abstract! Source: %s.%s", clazz.getName(), method.getName())); // TODO: support static
             }
 
             if (method.getParameterCount() != 1) {
-                //getLogger().warn("Require event bus listened method has only one event parameter! " + clazz);
-                continue;
+                throw new EventException(String.format("Require event bus listened method has only one event parameter! Source: %s.%s", clazz.getName(), method.getName()));
             }
 
             Class<?> eventType = method.getParameterTypes()[0];
             if (!Event.class.isAssignableFrom(eventType)) {
-                //getLogger().warn("Require event bus listened method has only one event parameter! " + clazz);
-                continue;
+                throw new EventException(String.format("Require event bus listened method has only one event parameter! Source: %s.%s", clazz.getName(), method.getName()));
             }
 
             try {
@@ -134,7 +137,7 @@ public class SimpleEventBus implements EventBus {
                 listenerExecutors.add(registeredListener);
                 addEventListener(eventType, registeredListener);
             } catch (Exception e) {
-                // TODO: Log
+                throw new EventException(String.format("Cannot create listener wrapper. Source: %s.%s", clazz.getName(), method.getName()));
             }
 
         }

@@ -1,6 +1,8 @@
 package com.github.mouse0w0.eventbus;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 public class RegisteredListener implements Comparable<RegisteredListener> {
 
@@ -10,6 +12,7 @@ public class RegisteredListener implements Comparable<RegisteredListener> {
     private final Class<?> eventType;
     private final boolean receiveCancelled;
     private final Order order;
+    private final Type genericType;
 
     public RegisteredListener(WrappedListener wrappedListener, Object owner, Method handler, Class<?> eventType, boolean receiveCancelled, Order order) {
         this.wrappedListener = wrappedListener;
@@ -18,6 +21,12 @@ public class RegisteredListener implements Comparable<RegisteredListener> {
         this.eventType = eventType;
         this.receiveCancelled = receiveCancelled;
         this.order = order;
+        if (GenericEvent.class.isAssignableFrom(eventType)) {
+            Type type = handler.getGenericParameterTypes()[0];
+            genericType = type instanceof ParameterizedType ? ((ParameterizedType) type).getActualTypeArguments()[0] : null;
+        } else {
+            genericType = null;
+        }
     }
 
     public Object getOwner() {
@@ -38,6 +47,14 @@ public class RegisteredListener implements Comparable<RegisteredListener> {
 
     public Order getOrder() {
         return order;
+    }
+
+    public boolean isGeneric() {
+        return genericType != null;
+    }
+
+    public Type getGenericType() {
+        return genericType;
     }
 
     public void post(Event event) throws Exception {
