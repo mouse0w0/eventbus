@@ -13,8 +13,6 @@ import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.objectweb.asm.Opcodes.*;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.RETURN;
 
 public final class AsmWrappedListenerFactory implements WrappedListenerFactory {
 
@@ -25,7 +23,8 @@ public final class AsmWrappedListenerFactory implements WrappedListenerFactory {
     private static final String wrappedListenerTypeName = WrappedListener.class.getTypeName().replace('.', '/');
     private static final String eventTypeDesc = Type.getDescriptor(Event.class);
 
-    private AtomicInteger uniqueId = new AtomicInteger(1);
+    private final SafeClassDefiner classDefiner = new SafeClassDefiner();
+    private final AtomicInteger uniqueId = new AtomicInteger(1);
 
     @Override
     public WrappedListener create(Object owner, Method handler, Class<?> eventType) throws Exception {
@@ -75,7 +74,7 @@ public final class AsmWrappedListenerFactory implements WrappedListenerFactory {
         }
         cw.visitEnd();
 
-        Class<?> executorType = SafeClassDefiner.INSTANCE.defineClass(ownerType.getClassLoader(), className,
+        Class<?> executorType = classDefiner.defineClass(ownerType.getClassLoader(), className,
                 cw.toByteArray());
         Constructor<?> executorConstructor = executorType.getConstructors()[0];
         return (WrappedListener) executorConstructor.newInstance(owner);

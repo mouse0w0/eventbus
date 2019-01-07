@@ -4,8 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-enum SafeClassDefiner {
-    INSTANCE;
+class SafeClassDefiner {
 
     private final Map<ClassLoader, GeneratedClassLoader> loaders = Collections.synchronizedMap(new WeakHashMap<>());
 
