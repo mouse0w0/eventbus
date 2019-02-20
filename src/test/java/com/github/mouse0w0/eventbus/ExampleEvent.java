@@ -15,6 +15,11 @@ public class ExampleEvent implements Event, Cancellable {
     private boolean cancelled = false;
 
     @Override
+    public boolean isCancellable() {
+        return true;
+    }
+
+    @Override
     public boolean isCancelled() {
         return cancelled;
     }

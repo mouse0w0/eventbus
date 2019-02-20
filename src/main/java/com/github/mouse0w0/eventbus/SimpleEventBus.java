@@ -1,215 +1,198 @@
 package com.github.mouse0w0.eventbus;
 
+import com.github.mouse0w0.eventbus.misc.EventExceptionHandler;
+import com.github.mouse0w0.eventbus.misc.EventListenerFactory;
+import com.github.mouse0w0.eventbus.misc.ListenerList;
+import com.github.mouse0w0.eventbus.misc.RegisteredListener;
+import net.jodah.typetools.TypeResolver;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
-import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 public class SimpleEventBus implements EventBus {
+
+    private final Map<Class<?>, ListenerList> listenerLists = new HashMap<>();
+    private final Map<Object, List<RegisteredListener>> registeredListeners = new HashMap<>();
+
+    private final EventExceptionHandler eventExceptionHandler;
+    private final EventListenerFactory eventListenerFactory;
+
+    public SimpleEventBus(EventExceptionHandler eventExceptionHandler, EventListenerFactory eventListenerFactory) {
+        this.eventExceptionHandler = eventExceptionHandler;
+        this.eventListenerFactory = eventListenerFactory;
+    }
+
+    @Override
+    public boolean post(Event event) {
+        ListenerList listenerList = getListenerList(event.getClass());
+        try {
+            listenerList.post(event);
+        } catch (Exception e) {
+            eventExceptionHandler.handle(listenerList, event, e);
+        }
+        return event.isCancelled();
+    }
+
+    private ListenerList getListenerList(Class<?> eventType) {
+        return listenerLists.computeIfAbsent(eventType, this::createListenerList);
+    }
+
+    private ListenerList createListenerList(Class<?> eventType) {
+        ListenerList listenerList = new ListenerList(eventType);
+        for (Map.Entry<Class<?>, ListenerList> entry : listenerLists.entrySet()) {
+            if (entry.getKey().isAssignableFrom(eventType)) {
+                listenerList.addParent(entry.getValue());
+            } else if (eventType.isAssignableFrom(entry.getKey())) {
+                entry.getValue().addParent(listenerList);
+            }
+        }
+        return listenerList;
+    }
+
+    @Override
+    public void register(Object target) {
+        if (registeredListeners.containsKey(target)) {
+            return;
+        }
+
+        if (target instanceof Class) {
+            registerClass((Class<?>) target);
+        } else {
+            registerObject(target);
+        }
+    }
+
+    private void registerObject(Object obj) {
+        List<RegisteredListener> listeners = new ArrayList<>();
+        Arrays.stream(obj.getClass().getMethods())
+                .filter(method -> !Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(Listener.class))
+                .map(method -> registerListener(obj, method, false))
+                .forEach(listeners::add);
+        registeredListeners.put(obj, listeners);
+    }
+
+    private void registerClass(Class<?> clazz) {
+        List<RegisteredListener> listeners = new ArrayList<>();
+        Arrays.stream(clazz.getMethods())
+                .filter(method -> Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(Listener.class))
+                .map(method -> registerListener(clazz, method, true))
+                .forEach(listeners::add);
+        registeredListeners.put(clazz, listeners);
+    }
+
+    private RegisteredListener registerListener(Object owner, Method method, boolean isStatic) {
+        if (method.getParameterCount() != 1) {
+            throw new EventException(String.format("The count of listener method parameter must be 1. Listener: %s.%s(?)", method.getDeclaringClass().getName(), method.getName()));
+        }
+
+        Class<?> eventType = method.getParameterTypes()[0];
+        if (!Event.class.isAssignableFrom(eventType)) {
+            throw new EventException(String.format("The parameter of listener method must be Event or it's child class. Listener: %s.%s(?)", method.getDeclaringClass().getName(), method.getName()));
+        }
+
+        if (!Modifier.isPublic(method.getModifiers())) {
+            throw new EventException(String.format("Listener method must be public. Listener: %s.%s(%s)", method.getDeclaringClass().getName(), method.getName(), method.getParameterTypes()[0].getName()));
+        }
+
+        Listener anno = method.getAnnotation(Listener.class);
+
+        Type genericType = null;
+
+        if (GenericEvent.class.isAssignableFrom(eventType)) {
+            Type type = method.getGenericParameterTypes()[0];
+            genericType = type instanceof ParameterizedType ? ((ParameterizedType) type).getActualTypeArguments()[0] : null;
+            if (genericType instanceof ParameterizedType) {
+                genericType = ((ParameterizedType) genericType).getRawType();
+            }
+        }
+
+        try {
+            RegisteredListener listener = new RegisteredListener(eventType, owner, anno.order(), anno.receiveCancelled(), genericType, eventListenerFactory.create(eventType, owner, method, isStatic));
+            getListenerList(eventType).register(listener);
+            return listener;
+        } catch (Exception e) {
+            throw new EventException(String.format("Cannot register listener. Listener: %s.%s(%s)", method.getDeclaringClass().getName(), method.getName(), method.getParameterTypes()[0].getName()), e);
+        }
+    }
+
+    @Override
+    public void unregister(Object target) {
+        if (!registeredListeners.containsKey(target)) {
+            return;
+        }
+
+        registeredListeners.get(target).forEach(listener -> getListenerList(listener.getEventType()).unregister(listener));
+    }
+
+    @Override
+    public <T extends Event> void addListener(Consumer<T> consumer) {
+        addListener(Order.DEFAULT, consumer);
+    }
+
+    @Override
+    public <T extends Event> void addListener(Order order, Consumer<T> consumer) {
+        addListener(Order.DEFAULT, false, consumer);
+    }
+
+    @Override
+    public <T extends Event> void addListener(Order order, boolean receiveCancelled, Consumer<T> consumer) {
+        addListener(order, receiveCancelled, (Class<T>) TypeResolver.resolveRawArgument(Consumer.class, consumer.getClass()), consumer);
+    }
+
+    @Override
+    public <T extends Event> void addListener(Order order, boolean receiveCancelled, Class<T> eventType, Consumer<T> consumer) {
+        getListenerList(eventType).register(new RegisteredListener(eventType, null, order, receiveCancelled, null, event -> consumer.accept(eventType.cast(event))));
+    }
+
+    @Override
+    public <T extends GenericEvent<? extends G>, G> void addGenericListener(Class<G> genericType, Consumer<T> consumer) {
+        addGenericListener(genericType, Order.DEFAULT, consumer);
+    }
+
+    @Override
+    public <T extends GenericEvent<? extends G>, G> void addGenericListener(Class<G> genericType, Order order, Consumer<T> consumer) {
+        addGenericListener(genericType, order, false, consumer);
+    }
+
+    @Override
+    public <T extends GenericEvent<? extends G>, G> void addGenericListener(Class<G> genericType, Order order, boolean receiveCancelled, Consumer<T> consumer) {
+        addGenericListener(genericType, order, receiveCancelled, (Class<T>) TypeResolver.resolveRawArgument(Consumer.class, consumer.getClass()), consumer);
+    }
+
+    @Override
+    public <T extends GenericEvent<? extends G>, G> void addGenericListener(Class<G> genericType, Order order, boolean receiveCancelled, Class<T> eventType, Consumer<T> consumer) {
+        getListenerList(eventType).register(new RegisteredListener(eventType, null, order, receiveCancelled, genericType, event -> consumer.accept(eventType.cast(event))));
+    }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    private final Map<Class<?>, Map<Order, Collection<RegisteredListener>>> eventListeners = new HashMap<>();
-    private final Map<Object, Collection<RegisteredListener>> registeredListeners = new HashMap<>();
-
-    private final WrappedListenerFactory wrappedListenerFactory;
-    private final ListenerExceptionHandler listenerExceptionHandler;
-
-    public SimpleEventBus(WrappedListenerFactory wrappedListenerFactory, ListenerExceptionHandler listenerExceptionHandler) {
-        this.wrappedListenerFactory = wrappedListenerFactory;
-        this.listenerExceptionHandler = listenerExceptionHandler;
-    }
-
-    @Override
-    public boolean post(Event event) {
-        Objects.requireNonNull(event, "Event cannot be null");
-
-        Map<Order, Collection<RegisteredListener>> orderedListeners = getListeners(event.getClass());
-        if (orderedListeners == null)
-            return false;
-
-        if (event.isCancellable()) {
-            Cancellable cancellable = (Cancellable) event;
-
-            for (Order order : Order.values()) {
-                Collection<RegisteredListener> listeners = orderedListeners.get(order);
-                if (listeners == null)
-                    continue;
-
-                for (RegisteredListener listener : listeners) {
-                    if (!cancellable.isCancelled() || listener.isReceiveCancelled())
-                        post(listener, event);
-                }
-            }
-            return cancellable.isCancelled();
-        } else {
-            for (Order order : Order.values()) {
-                Collection<RegisteredListener> listeners = orderedListeners.get(order);
-                if (listeners == null)
-                    continue;
-
-                for (RegisteredListener listener : listeners) {
-                    post(listener, event);
-                }
-            }
-            return false;
-        }
-    }
-
-    protected Map<Order, Collection<RegisteredListener>> getListeners(Class<?> eventType) {
-        Map<Order, Collection<RegisteredListener>> orderedListeners = eventListeners.get(eventType);
-        if (orderedListeners != null)
-            return orderedListeners;
-
-        orderedListeners = new EnumMap<>(Order.class);
-        for (Entry<Class<?>, Map<Order, Collection<RegisteredListener>>> entry : eventListeners.entrySet()) {
-            if (!entry.getKey().isAssignableFrom(eventType))
-                continue;
-
-            for (Entry<Order, Collection<RegisteredListener>> entry0 : entry.getValue().entrySet()) {
-                Collection<RegisteredListener> listeners = orderedListeners.get(entry0.getKey());
-                if (listeners == null) {
-                    listeners = new LinkedHashSet<>();
-                    orderedListeners.put(entry0.getKey(), listeners);
-                }
-                listeners.addAll(entry0.getValue());
-            }
-        }
-        eventListeners.put(eventType, orderedListeners);
-
-        return orderedListeners;
-    }
-
-    protected void post(RegisteredListener listener, Event event) {
-        try {
-            if (event instanceof GenericEvent && listener.isGeneric()) {
-                if (((GenericEvent) event).getGenericType() == listener.getGenericType()) {
-                    listener.post(event);
-                }
-            } else {
-                listener.post(event);
-            }
-        } catch (Exception e) {
-            handleListenerException(listener, event, e);
-        }
-    }
-
-    protected void handleListenerException(RegisteredListener listener, Event event, Exception exception) {
-        if (listenerExceptionHandler != null)
-            listenerExceptionHandler.handle(listener, event, exception);
-    }
-
-    @Override
-    public void register(Object listener) {
-        Objects.requireNonNull(listener, "Listener cannot be null");
-
-        if (registeredListeners.containsKey(listener))
-            throw new EventException("Listener has been registered.");
-
-        Collection<RegisteredListener> listenerExecutors = new LinkedList<>();
-
-        Class<?> clazz = listener.getClass();
-        for (Method method : clazz.getDeclaredMethods()) {
-            Listener anno = method.getAnnotation(Listener.class);
-            if (anno == null)
-                continue;
-
-            int modifiers = method.getModifiers();
-
-            if (!Modifier.isPublic(modifiers) || Modifier.isStatic(modifiers) || Modifier.isAbstract(modifiers)) {
-                throw new EventException(String.format("Require event bus listened method is public and not static/abstract! Source: %s.%s", clazz.getName(), method.getName())); // TODO: support static
-            }
-
-            if (method.getParameterCount() != 1) {
-                throw new EventException(String.format("Require event bus listened method has only one event parameter! Source: %s.%s", clazz.getName(), method.getName()));
-            }
-
-            Class<?> eventType = method.getParameterTypes()[0];
-            if (!Event.class.isAssignableFrom(eventType)) {
-                throw new EventException(String.format("Require event bus listened method has only one event parameter! Source: %s.%s", clazz.getName(), method.getName()));
-            }
-
-            try {
-                WrappedListener wrappedListener = wrappedListenerFactory.create(listener, method, eventType);
-                RegisteredListener registeredListener = new RegisteredListener(wrappedListener, listener, method, eventType, anno.receiveCancelled(), anno.order());
-                listenerExecutors.add(registeredListener);
-                addEventListener(eventType, registeredListener);
-            } catch (Exception e) {
-                throw new EventException(String.format("Cannot create listener wrapper. Source: %s.%s", clazz.getName(), method.getName()));
-            }
-
-        }
-
-        registeredListeners.put(listener, listenerExecutors);
-    }
-
-    private void addEventListener(Class<?> eventType, RegisteredListener listener) {
-        for (Entry<Class<?>, Map<Order, Collection<RegisteredListener>>> entry : eventListeners.entrySet()) {
-            Class<?> childEventType = entry.getKey();
-            if (!eventType.isAssignableFrom(childEventType))
-                continue;
-
-            addEventListener(entry.getValue(), listener);
-        }
-
-        if (!eventListeners.containsKey(eventType)) {
-            Map<Order, Collection<RegisteredListener>> orderedListeners = new EnumMap<>(Order.class);
-            eventListeners.put(eventType, orderedListeners);
-            addEventListener(orderedListeners, listener);
-        }
-    }
-
-    private void addEventListener(Map<Order, Collection<RegisteredListener>> orderedListeners,
-                                  RegisteredListener listener) {
-        Collection<RegisteredListener> listeners = orderedListeners.get(listener.getOrder());
-        if (listeners == null) {
-            listeners = new LinkedHashSet<>();
-            orderedListeners.put(listener.getOrder(), listeners);
-        }
-        listeners.add(listener);
-    }
-
-    @Override
-    public void unregister(Object listener) {
-        Objects.requireNonNull(listener, "Listener cannot be null");
-
-        Collection<RegisteredListener> executors = registeredListeners.get(listener);
-        if (executors == null)
-            return;
-
-        for (RegisteredListener executor : executors) {
-            Class<?> eventType = executor.getEventType();
-            for (Entry<Class<?>, Map<Order, Collection<RegisteredListener>>> entry : eventListeners.entrySet()) {
-                Class<?> childEventType = entry.getKey();
-                if (!eventType.isAssignableFrom(childEventType))
-                    continue;
-
-                entry.getValue().get(executor.getOrder()).remove(executor);
-            }
-        }
-    }
-
-    public static class Builder {
-        private WrappedListenerFactory wrappedListenerFactory;
-        private ListenerExceptionHandler listenerExceptionHandler;
+    public static final class Builder {
+        private EventExceptionHandler eventExceptionHandler = (list, event, e) -> {
+            throw new EventException(String.format("Cannot handle event. EventType: %s", event.getClass().getName()), e);
+        };
+        private EventListenerFactory eventListenerFactory;
 
         private Builder() {
         }
 
-        public Builder wrappedListenerFactory(WrappedListenerFactory wrappedListenerFactory) {
-            this.wrappedListenerFactory = wrappedListenerFactory;
+        public Builder eventExceptionHandler(EventExceptionHandler eventExceptionHandler) {
+            this.eventExceptionHandler = eventExceptionHandler;
             return this;
         }
 
-        public Builder listenerExceptionHandler(ListenerExceptionHandler listenerExceptionHandler) {
-            this.listenerExceptionHandler = listenerExceptionHandler;
+        public Builder eventListenerFactory(EventListenerFactory eventListenerFactory) {
+            this.eventListenerFactory = eventListenerFactory;
             return this;
         }
 
         public SimpleEventBus build() {
-            return new SimpleEventBus(wrappedListenerFactory, listenerExceptionHandler);
+            return new SimpleEventBus(eventExceptionHandler, eventListenerFactory);
         }
     }
 }

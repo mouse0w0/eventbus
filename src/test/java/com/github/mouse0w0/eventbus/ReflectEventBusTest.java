@@ -1,6 +1,6 @@
 package com.github.mouse0w0.eventbus;
 
-import com.github.mouse0w0.eventbus.reflect.ReflectWrappedListenerFactory;
+import com.github.mouse0w0.eventbus.reflect.ReflectEventListenerFactory;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ public class ReflectEventBusTest {
 
     @BeforeClass
     public static void init() {
-        eventBus = SimpleEventBus.builder().wrappedListenerFactory(ReflectWrappedListenerFactory.INSTANCE).build();
+        eventBus = SimpleEventBus.builder().eventListenerFactory(ReflectEventListenerFactory.instance()).build();
         eventBus.register(new ExampleListener());
     }
 
