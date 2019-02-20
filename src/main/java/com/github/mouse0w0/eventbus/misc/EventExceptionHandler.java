@@ -5,5 +5,5 @@ import com.github.mouse0w0.eventbus.Event;
 @FunctionalInterface
 public interface EventExceptionHandler {
 
-    void handle(ListenerList list, Event event, Exception e);
+    void handle(ListenerList list, RegisteredListener listener, Event event, Exception e);
 }

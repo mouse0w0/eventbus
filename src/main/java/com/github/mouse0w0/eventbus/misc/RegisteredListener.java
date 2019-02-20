@@ -12,7 +12,6 @@ public class RegisteredListener {
     private final Class<?> eventType;
     private final Object owner;
     private final Order order;
-    private final boolean receiveCancelled;
     private final Type genericType;
     private final EventListener eventListener;
     private final Predicate<Event> filter;
@@ -21,7 +20,6 @@ public class RegisteredListener {
         this.eventType = eventType;
         this.owner = owner;
         this.order = order;
-        this.receiveCancelled = receiveCancelled;
         this.genericType = genericType;
         this.eventListener = eventListener;
         this.filter = createFilter(receiveCancelled, genericType != null);
@@ -55,16 +53,8 @@ public class RegisteredListener {
         return order;
     }
 
-    public boolean isReceiveCancelled() {
-        return receiveCancelled;
-    }
-
-    public Type getGenericType() {
-        return genericType;
-    }
-
-    public boolean isGenericType() {
-        return genericType != null;
+    public EventListener getEventListener() {
+        return eventListener;
     }
 
     public void post(Event event) throws Exception {

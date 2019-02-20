@@ -1,6 +1,5 @@
 package com.github.mouse0w0.eventbus.misc;
 
-import com.github.mouse0w0.eventbus.Event;
 import com.github.mouse0w0.eventbus.Order;
 
 import java.util.*;
@@ -8,7 +7,7 @@ import java.util.*;
 public class ListenerList {
 
     private final Class<?> eventType;
-    private final List<ListenerList> parentListenerLists = new ArrayList<>();
+    private final List<ListenerList> parents = new ArrayList<>();
 
     private final EnumMap<Order, List<RegisteredListener>> listeners = new EnumMap<>(Order.class);
 
@@ -16,17 +15,8 @@ public class ListenerList {
         this.eventType = eventType;
     }
 
-    public void post(Event event) throws Exception {
-        for (Order order : Order.values()) {
-            for (RegisteredListener listener : listeners.getOrDefault(order, Collections.emptyList())) {
-                listener.post(event);
-            }
-            for (ListenerList parent : parentListenerLists) {
-                for (RegisteredListener listener : parent.listeners.getOrDefault(order, Collections.emptyList())) {
-                    listener.post(event);
-                }
-            }
-        }
+    public Class<?> getEventType() {
+        return eventType;
     }
 
     public void register(RegisteredListener listener) {
@@ -38,6 +28,14 @@ public class ListenerList {
     }
 
     public void addParent(ListenerList list) {
-        parentListenerLists.add(list);
+        parents.add(list);
+    }
+
+    public List<ListenerList> getParents() {
+        return parents;
+    }
+
+    public EnumMap<Order, List<RegisteredListener>> getListeners() {
+        return listeners;
     }
 }

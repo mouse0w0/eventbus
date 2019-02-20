@@ -29,12 +29,25 @@ public class SimpleEventBus implements EventBus {
     @Override
     public boolean post(Event event) {
         ListenerList listenerList = getListenerList(event.getClass());
-        try {
-            listenerList.post(event);
-        } catch (Exception e) {
-            eventExceptionHandler.handle(listenerList, event, e);
+        for (Order order : Order.values()) {
+            for (RegisteredListener listener : listenerList.getListeners().getOrDefault(order, Collections.emptyList())) {
+                try {
+                    listener.post(event);
+                } catch (Exception e) {
+                    eventExceptionHandler.handle(listenerList, listener, event, e);
+                }
+            }
+            for (ListenerList parent : listenerList.getParents()) {
+                for (RegisteredListener listener : parent.getListeners().getOrDefault(order, Collections.emptyList())) {
+                    try {
+                        listener.post(event);
+                    } catch (Exception e) {
+                        eventExceptionHandler.handle(listenerList, listener, event, e);
+                    }
+                }
+            }
         }
-        return event.isCancelled();
+        return event.isCancellable() && event.isCancelled();
     }
 
     private ListenerList getListenerList(Class<?> eventType) {
@@ -173,7 +186,7 @@ public class SimpleEventBus implements EventBus {
     }
 
     public static final class Builder {
-        private EventExceptionHandler eventExceptionHandler = (list, event, e) -> {
+        private EventExceptionHandler eventExceptionHandler = (list, listener, event, e) -> {
             throw new EventException(String.format("Cannot handle event. EventType: %s", event.getClass().getName()), e);
         };
         private EventListenerFactory eventListenerFactory;
