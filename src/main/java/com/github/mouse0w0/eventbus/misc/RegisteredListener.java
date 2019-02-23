@@ -1,5 +1,6 @@
 package com.github.mouse0w0.eventbus.misc;
 
+import com.github.mouse0w0.eventbus.Cancellable;
 import com.github.mouse0w0.eventbus.Event;
 import com.github.mouse0w0.eventbus.GenericEvent;
 import com.github.mouse0w0.eventbus.Order;
@@ -64,7 +65,7 @@ public class RegisteredListener {
     }
 
     private boolean checkCancel(Event event) {
-        return !event.isCancellable() || !event.isCancelled();
+        return !event.isCancellable() || !((Cancellable) event).isCancelled();
     }
 
     private boolean checkGeneric(Event event) {
