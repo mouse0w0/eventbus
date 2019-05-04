@@ -10,18 +10,20 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.github.mouse0w0.eventbus.ap.ProcessingUtils.*;
+import static com.github.mouse0w0.eventbus.ap.ProcessingUtils.getQualifiedName;
+import static com.github.mouse0w0.eventbus.ap.ProcessingUtils.hasModifier;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class ListenerProcessor extends AbstractProcessor {
 
     private static final String CLASS_NAME = Listener.class.getName();
+
+    private final static String EVENT_CLASS_NAME = Event.class.getName();
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -45,7 +47,7 @@ public class ListenerProcessor extends AbstractProcessor {
 
                 VariableElement event = parameters.get(0);
 
-                if (!checkEvent(event.asType())) {
+                if (!processingEnv.getTypeUtils().isAssignable(event.asType(), processingEnv.getElementUtils().getTypeElement(EVENT_CLASS_NAME).asType())) {
                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("The parameter of listener method must be Event or it's child class. Listener: %s.%s(%s)", owner.getQualifiedName(), method.getSimpleName(), getQualifiedName(event.asType())));
                 }
 
@@ -59,27 +61,5 @@ public class ListenerProcessor extends AbstractProcessor {
             }
         }
         return false;
-    }
-
-    private final static String EVENT_CLASS_NAME = Event.class.getName();
-    private final static String OBJECT_CLASS_NAME = Object.class.getName();
-
-    private boolean checkEvent(TypeMirror typeMirror) {
-        if (typeMirror.getKind() == TypeKind.NONE)
-            return false;
-
-        String typeName = getQualifiedName(typeMirror).toString();
-        if (EVENT_CLASS_NAME.equals(typeName))
-            return true;
-
-        if (OBJECT_CLASS_NAME.equals(typeName))
-            return false;
-
-        for (TypeMirror anInterface : getInterfaces(typeMirror)) {
-            if (checkEvent(anInterface))
-                return true;
-        }
-
-        return checkEvent(getSuperclass(typeMirror));
     }
 }
