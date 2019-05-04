@@ -6,7 +6,6 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import java.util.List;
 
 public class ProcessingUtils {
 
@@ -16,13 +15,5 @@ public class ProcessingUtils {
 
     public static Name getQualifiedName(TypeMirror typeMirror) {
         return ((TypeElement) ((DeclaredType) typeMirror).asElement()).getQualifiedName();
-    }
-
-    public static List<? extends TypeMirror> getInterfaces(TypeMirror typeMirror) {
-        return ((TypeElement) ((DeclaredType) typeMirror).asElement()).getInterfaces();
-    }
-
-    public static TypeMirror getSuperclass(TypeMirror typeMirror) {
-        return ((TypeElement) ((DeclaredType) typeMirror).asElement()).getSuperclass();
     }
 }
