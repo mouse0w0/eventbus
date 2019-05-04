@@ -5,11 +5,13 @@ import com.github.mouse0w0.eventbus.Event;
 import com.github.mouse0w0.eventbus.Listener;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.util.HashSet;
 import java.util.List;
@@ -23,13 +25,19 @@ public class ListenerProcessor extends AbstractProcessor {
 
     private static final String CLASS_NAME = Listener.class.getName();
 
-    private final static String EVENT_CLASS_NAME = Event.class.getName();
+    private TypeMirror eventTypeMirror;
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> set = new HashSet<>();
         set.add(CLASS_NAME);
         return set;
+    }
+
+    @Override
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+        eventTypeMirror = processingEnv.getElementUtils().getTypeElement(Event.class.getName()).asType();
     }
 
     @Override
@@ -47,7 +55,7 @@ public class ListenerProcessor extends AbstractProcessor {
 
                 VariableElement event = parameters.get(0);
 
-                if (!processingEnv.getTypeUtils().isAssignable(event.asType(), processingEnv.getElementUtils().getTypeElement(EVENT_CLASS_NAME).asType())) {
+                if (!processingEnv.getTypeUtils().isAssignable(event.asType(), eventTypeMirror)) {
                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("The parameter of listener method must be Event or it's child class. Listener: %s.%s(%s)", owner.getQualifiedName(), method.getSimpleName(), getQualifiedName(event.asType())));
                 }
 
