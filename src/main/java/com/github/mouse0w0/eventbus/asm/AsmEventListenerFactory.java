@@ -40,7 +40,7 @@ public final class AsmEventListenerFactory implements EventListenerFactory {
             return cachedWrappers.get(method);
         }
 
-        Class<?> ownerType = owner instanceof Class ? (Class<?>) owner : owner.getClass();
+        Class<?> ownerType = isStatic ? (Class<?>) owner : owner.getClass();
         String declClassName = Type.getInternalName(method.getDeclaringClass());
         String declClassDesc = Type.getDescriptor(method.getDeclaringClass());
         String eventName = Type.getInternalName(eventType);
