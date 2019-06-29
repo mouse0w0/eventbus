@@ -1,13 +1,16 @@
 package com.github.mouse0w0.eventbus.misc;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
 public class ListenerList {
 
     private final Class<?> eventType;
     private final List<ListenerList> children = new ArrayList<>();
 
-    private final Queue<RegisteredListener> listeners = new PriorityQueue<>(Comparator.comparing(RegisteredListener::getOrder));
+    private final Collection<RegisteredListener> listeners = SortedList.wrap(new ArrayList<>(), Comparator.comparingInt(o -> o.getOrder().ordinal()));
 
     public ListenerList(Class<?> eventType) {
         this.eventType = eventType;
@@ -37,7 +40,7 @@ public class ListenerList {
         child.listeners.addAll(listeners);
     }
 
-    public Queue<RegisteredListener> getListeners() {
+    public Collection<RegisteredListener> getListeners() {
         return listeners;
     }
 }
