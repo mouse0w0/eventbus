@@ -1,15 +1,13 @@
 package com.github.mouse0w0.eventbus.misc;
 
-import com.github.mouse0w0.eventbus.Order;
-
 import java.util.*;
 
 public class ListenerList {
 
     private final Class<?> eventType;
-    private final List<ListenerList> parents = new ArrayList<>();
+    private final List<ListenerList> children = new ArrayList<>();
 
-    private final EnumMap<Order, List<RegisteredListener>> listeners = new EnumMap<>(Order.class);
+    private final Queue<RegisteredListener> listeners = new PriorityQueue<>(Comparator.comparing(RegisteredListener::getOrder));
 
     public ListenerList(Class<?> eventType) {
         this.eventType = eventType;
@@ -20,22 +18,26 @@ public class ListenerList {
     }
 
     public void register(RegisteredListener listener) {
-        listeners.computeIfAbsent(listener.getOrder(), order -> new ArrayList<>()).add(listener);
+        listeners.add(listener);
+        children.forEach(listenerList -> listenerList.listeners.add(listener));
     }
 
     public void unregister(RegisteredListener listener) {
-        listeners.computeIfAbsent(listener.getOrder(), order -> new ArrayList<>()).remove(listener);
+        listeners.remove(listener);
+        children.forEach(listenerList -> listenerList.listeners.remove(listener));
     }
 
-    public void addParent(ListenerList list) {
-        parents.add(list);
+    public void addParent(ListenerList parent) {
+        parent.children.add(this);
+        listeners.addAll(parent.listeners);
     }
 
-    public List<ListenerList> getParents() {
-        return parents;
+    public void addChild(ListenerList child) {
+        children.add(child);
+        child.listeners.addAll(listeners);
     }
 
-    public EnumMap<Order, List<RegisteredListener>> getListeners() {
+    public Queue<RegisteredListener> getListeners() {
         return listeners;
     }
 }
