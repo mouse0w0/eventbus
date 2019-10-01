@@ -29,11 +29,14 @@ public class SimpleEventBus implements EventBus {
     @Override
     public boolean post(Event event) {
         ListenerList listenerList = getListenerList(event.getClass());
-        for (RegisteredListener listener : listenerList.getListeners()) {
-            try {
-                listener.post(event);
-            } catch (Exception e) {
-                eventExceptionHandler.handle(listenerList, listener, event, e);
+        Collection<RegisteredListener> listeners = listenerList.getListeners();
+        synchronized (listeners) {
+            for (RegisteredListener listener : listeners) {
+                try {
+                    listener.post(event);
+                } catch (Exception e) {
+                    eventExceptionHandler.handle(listenerList, listener, event, e);
+                }
             }
         }
         return event.isCancellable() && ((Cancellable) event).isCancelled();
