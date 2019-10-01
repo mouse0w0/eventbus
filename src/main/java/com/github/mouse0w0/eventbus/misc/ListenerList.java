@@ -21,39 +21,23 @@ public class ListenerList {
     }
 
     public void register(RegisteredListener listener) {
-        synchronized (listeners) {
-            listeners.add(listener);
-        }
-        children.forEach(listenerList -> {
-            synchronized (listenerList.listeners) {
-                listenerList.listeners.add(listener);
-            }
-        });
+        listeners.add(listener);
+        children.forEach(listenerList -> listenerList.listeners.add(listener));
     }
 
     public void unregister(RegisteredListener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
-        children.forEach(listenerList -> {
-            synchronized (listenerList.listeners) {
-                listenerList.listeners.remove(listener);
-            }
-        });
+        listeners.remove(listener);
+        children.forEach(listenerList -> listenerList.listeners.remove(listener));
     }
 
     public void addParent(ListenerList parent) {
         parent.children.add(this);
-        synchronized (listeners) {
-            listeners.addAll(parent.listeners);
-        }
+        listeners.addAll(parent.listeners);
     }
 
     public void addChild(ListenerList child) {
         children.add(child);
-        synchronized (child.listeners) {
-            child.listeners.addAll(listeners);
-        }
+        child.listeners.addAll(listeners);
     }
 
     public Collection<RegisteredListener> getListeners() {
