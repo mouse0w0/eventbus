@@ -1,8 +1,8 @@
 package com.github.mouse0w0.eventbus;
 
 import com.github.mouse0w0.eventbus.asm.AsmEventListenerFactory;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class AsmEventBusTest {
 
@@ -10,7 +10,7 @@ public class AsmEventBusTest {
     private static ExampleListener listener;
     private static ExampleGenericListener genericListener;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         eventBus = SimpleEventBus.builder().eventListenerFactory(AsmEventListenerFactory.create()).build();
         listener = new ExampleListener();

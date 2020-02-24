@@ -1,13 +1,13 @@
 package com.github.mouse0w0.eventbus;
 
 import com.github.mouse0w0.eventbus.reflect.ReflectEventListenerFactory;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class ReflectEventBusTest {
     private static EventBus eventBus;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         eventBus = SimpleEventBus.builder().eventListenerFactory(ReflectEventListenerFactory.instance()).build();
         eventBus.register(new ExampleListener());
