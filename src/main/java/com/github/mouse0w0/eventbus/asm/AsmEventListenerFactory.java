@@ -22,8 +22,10 @@ public final class AsmEventListenerFactory implements EventListenerFactory {
         return new AsmEventListenerFactory();
     }
 
-    private static final String EVENT_LISTENER_INTERFACE_NAME = EventListener.class.getTypeName().replace('.', '/');
+    private static final String[] INTERFACES = {Type.getInternalName(EventListener.class)};
+    private static final String[] THROWS = {Type.getInternalName(Exception.class)};
     private static final String EVENT_TYPE_DESC = Type.getDescriptor(Event.class);
+    private static final String METHOD_POST_DESC = "(" + EVENT_TYPE_DESC + ")V";
 
     private final SafeClassDefiner classDefiner = new SafeClassDefiner();
     private final AtomicInteger uniqueId = new AtomicInteger(1);
@@ -52,7 +54,7 @@ public final class AsmEventListenerFactory implements EventListenerFactory {
         FieldVisitor fv;
         MethodVisitor mv;
 
-        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, wrapperName, null, "java/lang/Object", new String[]{EVENT_LISTENER_INTERFACE_NAME});
+        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, wrapperName, null, "java/lang/Object", INTERFACES);
 
         cw.visitSource(".dynamic", null);
 
@@ -72,11 +74,11 @@ public final class AsmEventListenerFactory implements EventListenerFactory {
                 mv.visitFieldInsn(PUTFIELD, wrapperName, "owner", declClassDesc);
             }
             mv.visitInsn(RETURN);
-            mv.visitMaxs(2,2);
+            mv.visitMaxs(2, 2);
             mv.visitEnd();
         }
         {
-            mv = cw.visitMethod(ACC_PUBLIC, "post", "(" + EVENT_TYPE_DESC + ")V", null, new String[]{"java/lang/Exception"});
+            mv = cw.visitMethod(ACC_PUBLIC, "post", METHOD_POST_DESC, null, THROWS);
             if (!isStatic) {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, wrapperName, "owner", declClassDesc);
@@ -85,7 +87,7 @@ public final class AsmEventListenerFactory implements EventListenerFactory {
             mv.visitTypeInsn(CHECKCAST, eventName);
             mv.visitMethodInsn(isStatic ? INVOKESTATIC : INVOKEVIRTUAL, declClassName, methodName, methodDesc, false);
             mv.visitInsn(RETURN);
-            mv.visitMaxs(2,2);
+            mv.visitMaxs(2, 2);
             mv.visitEnd();
         }
         cw.visitEnd();
