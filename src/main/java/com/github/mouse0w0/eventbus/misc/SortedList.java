@@ -3,53 +3,16 @@ package com.github.mouse0w0.eventbus.misc;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class SortedList<E> extends AbstractList<E> {
-
-    public static <E> SortedList<E> create(Comparator<E> comparator) {
-        return create(comparator, LinkedList::new);
-    }
+final class SortedList<E> extends AbstractList<E> {
 
     public static <E> SortedList<E> create(Comparator<E> comparator, Supplier<List<E>> constructor) {
         return new SortedList<>(constructor.get(), comparator);
     }
 
-    public static <E extends Comparable<E>> SortedList<E> create() {
-        return create(Comparable::compareTo);
-    }
-
-    public static <E extends Comparable<E>> SortedList<E> create(Supplier<List<E>> constructor) {
-        return create(Comparable::compareTo, constructor);
-    }
-
-    public static <E> SortedList<E> copyOf(List<E> list, Comparator<E> comparator) {
-        for (int i = 0, size = list.size(); i < size; i++) {
-            E element = list.get(i);
-            if (element == null)
-                list.remove(i);
-        }
-        SortedList<E> sortedList = create(comparator);
-        sortedList.addAll(list);
-        return sortedList;
-    }
-
-    public static <E extends Comparable<E>> SortedList<E> copyOf(List<E> list) {
-        return copyOf(list, Comparable::compareTo);
-    }
-
-    public static <E> SortedList<E> of(Comparator<E> comparator, E... elements) {
-        SortedList<E> sortedList = create(comparator);
-        Collections.addAll(sortedList, elements);
-        return sortedList;
-    }
-
-    public static <E extends Comparable<E>> SortedList<E> of(E... elements) {
-        return of(Comparable::compareTo, elements);
-    }
-
     private final List<E> list;
     private final Comparator<E> comparator;
 
-    protected SortedList(List<E> list, Comparator<E> comparator) {
+    private SortedList(List<E> list, Comparator<E> comparator) {
         this.list = list;
         this.comparator = comparator;
     }
@@ -96,6 +59,4 @@ public class SortedList<E> extends AbstractList<E> {
     public int size() {
         return list.size();
     }
-
-
 }
