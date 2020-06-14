@@ -155,7 +155,7 @@ public class SimpleEventBus implements EventBus {
             throw new IllegalStateException("Listener has been registered");
         }
         RegisteredListener listener = new RegisteredListener(eventType, consumer, order, receiveCancelled, null, event -> consumer.accept(eventType.cast(event)));
-        registeredListeners.put(listener, List.of(listener));
+        registeredListeners.put(listener, Collections.singletonList(listener));
         getListenerList(eventType).register(listener);
     }
 
@@ -180,7 +180,7 @@ public class SimpleEventBus implements EventBus {
             throw new IllegalStateException("Listener has been registered");
         }
         RegisteredListener listener = new RegisteredListener(eventType, consumer, order, receiveCancelled, genericType, event -> consumer.accept(eventType.cast(event)));
-        registeredListeners.put(listener, List.of(listener));
+        registeredListeners.put(listener, Collections.singletonList(listener));
         getListenerList(eventType).register(listener);
     }
 

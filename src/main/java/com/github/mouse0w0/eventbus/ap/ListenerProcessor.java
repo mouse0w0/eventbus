@@ -19,7 +19,7 @@ import java.util.Set;
 
 import static com.github.mouse0w0.eventbus.ap.ProcessingUtils.hasModifier;
 
-@SupportedSourceVersion(SourceVersion.RELEASE_11)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class ListenerProcessor extends AbstractProcessor {
 
     private static final String CLASS_NAME = Listener.class.getName();
