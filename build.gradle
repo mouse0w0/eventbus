@@ -3,9 +3,9 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 group 'com.github.mouse0w0'
-version '2.4.1'
+version '2.4.2'
 
-sourceCompatibility = targetCompatibility = 11
+sourceCompatibility = targetCompatibility = 1.8
 
 publishing {
     repositories {
