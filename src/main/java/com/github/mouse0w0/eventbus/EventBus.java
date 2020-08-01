@@ -7,17 +7,20 @@ public interface EventBus {
     /**
      * Handle a event.
      *
+     * @param event The event
      * @return True if cancelled, false if not.
      */
     boolean post(Event event);
 
     /**
      * Register listeners.
+     * @param target The listener
      */
     void register(Object target);
 
     /**
      * Unregister listeners.
+     * @param target The listener
      */
     void unregister(Object target);
 

@@ -1,6 +1,16 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.9.2'
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'com.novoda.bintray-release'
 
 group 'com.github.mouse0w0'
 version '2.4.4'
@@ -35,4 +45,13 @@ dependencies {
     compile 'net.jodah:typetools:0.6.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
+}
+
+publish {
+    userOrg = 'mouse0w0'
+    groupId = project.group
+    artifactId = 'eventbus'
+    publishVersion = project.version
+    desc = 'Event bus implementation for Java'
+    website = 'https://github.com/Mouse0w0/asm-extree'
 }

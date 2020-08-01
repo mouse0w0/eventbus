@@ -17,6 +17,8 @@ public @interface Listener {
 
 	/**
 	 * A order of event handler for deciding when it will be call.
+	 *
+	 * @return The order
 	 */
 	Order order() default Order.DEFAULT;
 
