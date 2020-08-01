@@ -53,5 +53,5 @@ publish {
     artifactId = 'eventbus'
     publishVersion = project.version
     desc = 'Event bus implementation for Java'
-    website = 'https://github.com/Mouse0w0/asm-extree'
+    website = 'https://github.com/mouse0w0/eventbus'
 }
