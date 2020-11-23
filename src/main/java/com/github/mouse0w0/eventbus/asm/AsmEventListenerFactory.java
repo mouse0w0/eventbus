@@ -27,7 +27,7 @@ public final class AsmEventListenerFactory implements EventListenerFactory {
     private static final String EVENT_TYPE_DESC = Type.getDescriptor(Event.class);
     private static final String METHOD_POST_DESC = "(" + EVENT_TYPE_DESC + ")V";
 
-    private final SafeClassDefiner classDefiner = new SafeClassDefiner();
+    private final ClassDefiner classDefiner = new ClassDefiner();
     private final AtomicInteger uniqueId = new AtomicInteger(1);
     private final Map<Method, Class<?>> cachedWrappers = new HashMap<>();
 
