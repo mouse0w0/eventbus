@@ -16,7 +16,7 @@ class ClassDefiner {
 
     private static void checkClass(String name, ClassLoader classLoader) {
         try {
-            Class.forName(name, true, classLoader);
+            Class.forName(name, false, classLoader);
             throw new IllegalStateException("Class " + name + " already defined");
         } catch (ClassNotFoundException ignored) {
         }
