@@ -29,7 +29,7 @@ public class SimpleEventBus implements EventBus {
     @Override
     public boolean post(Event event) {
         ListenerList listenerList = getListenerList(event.getClass());
-        for (RegisteredListener listener : listenerList.getListeners()) {
+        for (RegisteredListener listener : listenerList) {
             try {
                 listener.post(event);
             } catch (Exception e) {
@@ -44,7 +44,7 @@ public class SimpleEventBus implements EventBus {
     }
 
     private ListenerList createListenerList(Class<?> eventType) {
-        ListenerList listenerList = new ListenerList(eventType);
+        ListenerList listenerList = new ListenerList();
         for (Map.Entry<Class<?>, ListenerList> entry : listenerLists.entrySet()) {
             if (entry.getKey().isAssignableFrom(eventType)) {
                 listenerList.addParent(entry.getValue());

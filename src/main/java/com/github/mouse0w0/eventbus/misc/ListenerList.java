@@ -1,33 +1,39 @@
 package com.github.mouse0w0.eventbus.misc;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
-public class ListenerList {
-
-    private final Class<?> eventType;
+public final class ListenerList implements Iterable<RegisteredListener> {
     private final List<ListenerList> children = new ArrayList<>();
-
-    private final Collection<RegisteredListener> listeners = SortedList.create(Comparator.comparingInt(o -> o.getOrder().ordinal()), ArrayList::new);
-
-    public ListenerList(Class<?> eventType) {
-        this.eventType = eventType;
-    }
-
-    public Class<?> getEventType() {
-        return eventType;
-    }
+    private final List<RegisteredListener> listeners = new ArrayList<>();
 
     public void register(RegisteredListener listener) {
-        listeners.add(listener);
-        children.forEach(listenerList -> listenerList.listeners.add(listener));
+        addListener(listener);
+        for (ListenerList child : children) {
+            child.addListener(listener);
+        }
     }
 
     public void unregister(RegisteredListener listener) {
+        removeListener(listener);
+        for (ListenerList child : children) {
+            child.removeListener(listener);
+        }
+    }
+
+    private void addListener(RegisteredListener listener) {
+        for (int i = 0, size = listeners.size(); i < size; i++) {
+            if (listener.getOrder().compareTo(listeners.get(i).getOrder()) < 0) {
+                listeners.add(i, listener);
+                return;
+            }
+        }
+        listeners.add(listener);
+    }
+
+    private void removeListener(RegisteredListener listener) {
         listeners.remove(listener);
-        children.forEach(listenerList -> listenerList.listeners.remove(listener));
     }
 
     public void addParent(ListenerList parent) {
@@ -40,7 +46,8 @@ public class ListenerList {
         child.listeners.addAll(listeners);
     }
 
-    public Collection<RegisteredListener> getListeners() {
-        return listeners;
+    @Override
+    public Iterator<RegisteredListener> iterator() {
+        return listeners.iterator();
     }
 }

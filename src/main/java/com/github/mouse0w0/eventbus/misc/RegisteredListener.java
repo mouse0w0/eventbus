@@ -8,7 +8,7 @@ import com.github.mouse0w0.eventbus.Order;
 import java.lang.reflect.Type;
 import java.util.function.Predicate;
 
-public class RegisteredListener {
+public final class RegisteredListener {
 
     private final Class<?> eventType;
     private final Object owner;
