@@ -1,5 +1,7 @@
 package com.github.mouse0w0.eventbus;
 
+import org.junit.jupiter.api.Assertions;
+
 public class ExampleGenericListener {
 
     public boolean genericTestDone;
@@ -12,7 +14,7 @@ public class ExampleGenericListener {
 
     @Listener
     public void onGeneric$2(ExampleGenericEvent<Object> event) {
-        assert false;
+        Assertions.fail();
     }
 
     @Listener

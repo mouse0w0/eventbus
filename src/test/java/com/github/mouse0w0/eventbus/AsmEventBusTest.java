@@ -1,6 +1,7 @@
 package com.github.mouse0w0.eventbus;
 
 import com.github.mouse0w0.eventbus.asm.AsmEventListenerFactory;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -26,8 +27,8 @@ public class AsmEventBusTest {
         eventBus.post(event);
         eventBus.unregister(listener);
         eventBus.post(new ExampleGenericEvent<>(String.class));
-        assert event.isCancelled();
-        assert genericListener.normalTestDone;
-        assert genericListener.genericTestDone;
+        Assertions.assertTrue(event.isCancelled());
+        Assertions.assertTrue(genericListener.normalTestDone);
+        Assertions.assertTrue(genericListener.genericTestDone);
     }
 }

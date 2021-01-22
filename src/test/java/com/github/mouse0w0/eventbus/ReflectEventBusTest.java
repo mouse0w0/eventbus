@@ -1,6 +1,7 @@
 package com.github.mouse0w0.eventbus;
 
 import com.github.mouse0w0.eventbus.reflect.ReflectEventListenerFactory;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,6 @@ public class ReflectEventBusTest {
     public void test() {
         ExampleEvent event = new ExampleEvent();
         eventBus.post(event);
-        assert event.isCancelled();
+        Assertions.assertTrue(event.isCancelled());
     }
 }
