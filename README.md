@@ -1,11 +1,10 @@
-# EventBus
+# eventbus
 [![](https://jitpack.io/v/Mouse0w0/EventBus.svg)](https://jitpack.io/#Mouse0w0/eventbus)
 
 ## How to use it
 
 ### Maven
 Step 1. Add the JCenter repository to your build file
-
 ```xml
 	<repositories>
 		<repository>
@@ -14,13 +13,15 @@ Step 1. Add the JCenter repository to your build file
 		</repository>
 	</repositories>
 ```
+
 Step 2. Add the dependency
 ```xml
-	<dependency>
-	    <groupId>com.github.Mouse0w0</groupId>
-	    <artifactId>eventbus</artifactId>
-	    <version>2.5.1</version>
-	</dependency>
+
+<dependency>
+    <groupId>com.github.mouse0w0</groupId>
+    <artifactId>eventbus</artifactId>
+    <version>2.6.0</version>
+</dependency>
 ```
 ### Gradle
 Step 1. Add the JCenter repository to your build file
@@ -33,9 +34,10 @@ Add it in your root build.gradle at the end of repositories:
 		}
 	}
 ```
+
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        implementation 'com.github.Mouse0w0:eventbus:2.5.1'
+	        implementation 'com.github.mouse0w0:eventbus:2.6.0'
 	}
 ```

@@ -13,7 +13,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.novoda.bintray-release'
 
 group 'com.github.mouse0w0'
-version '2.5.1'
+version '2.6.0'
 
 sourceCompatibility = targetCompatibility = 1.8
 
