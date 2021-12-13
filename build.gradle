@@ -3,7 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 group 'com.github.mouse0w0'
-version '2.6.0'
+version '2.6.1'
 
 sourceCompatibility = targetCompatibility = 1.8
 
@@ -78,6 +78,13 @@ publishing {
     }
 }
 
-signing {
-    sign publishing.publications.maven
+task signOSSRH {
+    doLast {
+        signing {
+            sign publishing.publications.maven
+        }
+    }
 }
+
+publishMavenPublicationToOSSRHRepository.dependsOn signOSSRH
+publishAllPublicationsToOSSRHRepository.dependsOn signOSSRH
