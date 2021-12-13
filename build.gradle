@@ -78,11 +78,9 @@ publishing {
     }
 }
 
-task signOSSRH {
-    signing {
-        sign publishing.publications.maven
+signing {
+    required {
+        gradle.taskGraph.hasTask("publishMavenPublicationToOSSRHRepository")
     }
+    sign publishing.publications.maven
 }
-
-publishMavenPublicationToOSSRHRepository.dependsOn signOSSRH
-publishAllPublicationsToOSSRHRepository.dependsOn signOSSRH
