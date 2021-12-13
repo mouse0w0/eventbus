@@ -17,8 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.github.mouse0w0.eventbus.ap.ProcessingUtils.hasModifier;
-
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class ListenerProcessor extends AbstractProcessor {
 
@@ -65,6 +63,13 @@ public class ListenerProcessor extends AbstractProcessor {
                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "The return type of listener method must be void.", method);
                 }
             }
+        }
+        return false;
+    }
+
+    private static boolean hasModifier(Element element, Modifier modifier) {
+        for (Modifier m : element.getModifiers()) {
+            if (modifier == m) return true;
         }
         return false;
     }
