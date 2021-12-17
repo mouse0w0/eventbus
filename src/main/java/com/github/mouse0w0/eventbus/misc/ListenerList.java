@@ -23,17 +23,24 @@ public final class ListenerList implements Iterable<RegisteredListener> {
     }
 
     private void addListener(RegisteredListener listener) {
-        for (int i = 0, size = listeners.size(); i < size; i++) {
-            if (listener.getOrder().compareTo(listeners.get(i).getOrder()) < 0) {
-                listeners.add(i, listener);
-                return;
+        int left = 0, right = listeners.size();
+        while (left < right) {
+            int mid = (left + right) >>> 1;
+            if (compareListener(listener, listeners.get(mid)) < 0) {
+                right = mid;
+            } else {
+                left = mid + 1;
             }
         }
-        listeners.add(listener);
+        listeners.add(left, listener);
     }
 
     private void removeListener(RegisteredListener listener) {
         listeners.remove(listener);
+    }
+
+    private int compareListener(RegisteredListener o1, RegisteredListener o2) {
+        return o1.getOrder().compareTo(o2.getOrder());
     }
 
     public void addParent(ListenerList parent) {
