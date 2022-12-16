@@ -55,7 +55,7 @@ public class ListenerProcessor extends AbstractProcessor {
                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "The type of parameter of listener method must be Event or its sub class.", method);
                 }
 
-                if (!hasModifier(method, Modifier.PUBLIC)) {
+                if (!method.getModifiers().contains(Modifier.PUBLIC)) {
                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Listener method must be public", method);
                 }
 
@@ -63,13 +63,6 @@ public class ListenerProcessor extends AbstractProcessor {
                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "The return type of listener method must be void.", method);
                 }
             }
-        }
-        return false;
-    }
-
-    private static boolean hasModifier(Element element, Modifier modifier) {
-        for (Modifier m : element.getModifiers()) {
-            if (modifier == m) return true;
         }
         return false;
     }

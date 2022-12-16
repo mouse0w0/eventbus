@@ -1,28 +1,20 @@
-package com.github.mouse0w0.eventbus.misc;
-
-import com.github.mouse0w0.eventbus.Cancellable;
-import com.github.mouse0w0.eventbus.Event;
-import com.github.mouse0w0.eventbus.GenericEvent;
-import com.github.mouse0w0.eventbus.Order;
+package com.github.mouse0w0.eventbus;
 
 import java.lang.reflect.Type;
 import java.util.function.Predicate;
 
-public final class RegisteredListener {
-
+final class ListenerWrapper {
     private final Class<?> eventType;
-    private final Object owner;
-    private final Order order;
     private final Type genericType;
-    private final EventListener eventListener;
+    private final Order order;
+    private final ListenerInvoker invoker;
     private final Predicate<Event> filter;
 
-    public RegisteredListener(Class<?> eventType, Object owner, Order order, boolean receiveCancelled, Type genericType, EventListener eventListener) {
+    public ListenerWrapper(Class<?> eventType, Type genericType, Order order, boolean receiveCancelled, ListenerInvoker invoker) {
         this.eventType = eventType;
-        this.owner = owner;
-        this.order = order;
         this.genericType = genericType;
-        this.eventListener = eventListener;
+        this.order = order;
+        this.invoker = invoker;
         this.filter = createFilter(receiveCancelled, genericType != null);
     }
 
@@ -46,21 +38,13 @@ public final class RegisteredListener {
         return eventType;
     }
 
-    public Object getOwner() {
-        return owner;
-    }
-
     public Order getOrder() {
         return order;
     }
 
-    public EventListener getEventListener() {
-        return eventListener;
-    }
-
-    public void post(Event event) throws Exception {
+    public void post(Event event) throws Throwable {
         if (filter.test(event)) {
-            eventListener.post(event);
+            invoker.invoke(event);
         }
     }
 

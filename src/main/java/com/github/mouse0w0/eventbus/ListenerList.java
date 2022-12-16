@@ -1,28 +1,28 @@
-package com.github.mouse0w0.eventbus.misc;
+package com.github.mouse0w0.eventbus;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public final class ListenerList implements Iterable<RegisteredListener> {
+final class ListenerList implements Iterable<ListenerWrapper> {
     private final List<ListenerList> children = new ArrayList<>();
-    private final List<RegisteredListener> listeners = new ArrayList<>();
+    private final List<ListenerWrapper> listeners = new ArrayList<>();
 
-    public void register(RegisteredListener listener) {
+    public void register(ListenerWrapper listener) {
         addListener(listener);
         for (ListenerList child : children) {
             child.addListener(listener);
         }
     }
 
-    public void unregister(RegisteredListener listener) {
+    public void unregister(ListenerWrapper listener) {
         removeListener(listener);
         for (ListenerList child : children) {
             child.removeListener(listener);
         }
     }
 
-    private void addListener(RegisteredListener listener) {
+    private void addListener(ListenerWrapper listener) {
         int left = 0, right = listeners.size();
         while (left < right) {
             int mid = (left + right) >>> 1;
@@ -35,26 +35,30 @@ public final class ListenerList implements Iterable<RegisteredListener> {
         listeners.add(left, listener);
     }
 
-    private void removeListener(RegisteredListener listener) {
+    private void removeListener(ListenerWrapper listener) {
         listeners.remove(listener);
     }
 
-    private int compareListener(RegisteredListener o1, RegisteredListener o2) {
+    private int compareListener(ListenerWrapper o1, ListenerWrapper o2) {
         return o1.getOrder().compareTo(o2.getOrder());
     }
 
     public void addParent(ListenerList parent) {
         parent.children.add(this);
-        listeners.addAll(parent.listeners);
+        for (ListenerWrapper listener : parent.listeners) {
+            addListener(listener);
+        }
     }
 
     public void addChild(ListenerList child) {
         children.add(child);
-        child.listeners.addAll(listeners);
+        for (ListenerWrapper listener : listeners) {
+            child.addListener(listener);
+        }
     }
 
     @Override
-    public Iterator<RegisteredListener> iterator() {
+    public Iterator<ListenerWrapper> iterator() {
         return listeners.iterator();
     }
 }
