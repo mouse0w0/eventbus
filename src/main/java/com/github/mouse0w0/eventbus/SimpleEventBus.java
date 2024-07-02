@@ -167,7 +167,7 @@ public class SimpleEventBus implements EventBus {
         if (ownerToListeners.containsKey(consumer)) {
             throw new IllegalStateException("Listener has been registered.");
         }
-        ListenerWrapper listener = new ListenerWrapper(eventType, null, order, receiveCancelled, new ConsumeListenerInvoker<>(eventType, consumer));
+        ListenerWrapper listener = new ListenerWrapper(eventType, null, order, receiveCancelled, new ConsumerListenerInvoker<>(eventType, consumer));
         getListenerList(eventType).register(listener);
         ownerToListeners.put(consumer, new ListenerWrapper[]{listener});
     }
@@ -192,7 +192,7 @@ public class SimpleEventBus implements EventBus {
         if (ownerToListeners.containsKey(consumer)) {
             throw new IllegalStateException("Listener has been registered.");
         }
-        ListenerWrapper listener = new ListenerWrapper(eventType, genericType, order, receiveCancelled, new ConsumeListenerInvoker<>(eventType, consumer));
+        ListenerWrapper listener = new ListenerWrapper(eventType, genericType, order, receiveCancelled, new ConsumerListenerInvoker<>(eventType, consumer));
         getListenerList(eventType).register(listener);
         ownerToListeners.put(consumer, new ListenerWrapper[]{listener});
     }

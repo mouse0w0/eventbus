@@ -2,7 +2,7 @@ package com.github.mouse0w0.eventbus;
 
 import java.lang.invoke.MethodHandle;
 
-class MethodHandleListenerInvoker implements ListenerInvoker {
+public class MethodHandleListenerInvoker implements ListenerInvoker {
     private final MethodHandle handle;
 
     public MethodHandleListenerInvoker(MethodHandle handle) {
