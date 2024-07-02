@@ -3,7 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 group 'com.github.mouse0w0'
-version '3.0.1'
+version '4.0.0'
 
 sourceCompatibility = targetCompatibility = 1.8
 
