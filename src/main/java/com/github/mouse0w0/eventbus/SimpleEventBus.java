@@ -68,13 +68,16 @@ public class SimpleEventBus implements EventBus {
         }
 
         boolean isStatic = target.getClass() == Class.class;
-        Class<?> clazz = isStatic ? (Class<?>) target : target.getClass();
+        Class<?> targetClass = isStatic ? (Class<?>) target : target.getClass();
         List<ListenerWrapper> listeners = new ArrayList<>();
-        for (Method method : clazz.getDeclaredMethods()) {
+        for (Method method : targetClass.getDeclaredMethods()) {
             Listener annotation = method.getAnnotation(Listener.class);
             if (annotation != null && Modifier.isStatic(method.getModifiers()) == isStatic) {
                 listeners.add(registerListener(target, method, annotation, isStatic));
             }
+        }
+        if (listeners.isEmpty()) {
+            throw new IllegalArgumentException(targetClass + " has no @Listener method");
         }
         ownerToListeners.put(target, listeners.toArray(ListenerWrapper.EMPTY_ARRAY));
     }
