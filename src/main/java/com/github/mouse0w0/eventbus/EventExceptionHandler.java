@@ -10,7 +10,12 @@ public interface EventExceptionHandler {
     EventExceptionHandler RETHROW = new EventExceptionHandler() {
         @Override
         public void handle(Event event, Throwable throwable) {
-            throw new EventException("Cannot handle event: " + event.getClass().getName(), throwable);
+            rethrow(throwable);
+        }
+
+        @SuppressWarnings("unchecked")
+        private <T extends Throwable> void rethrow(Throwable t) throws T {
+            throw (T) t;
         }
     };
     EventExceptionHandler PRINT = new EventExceptionHandler() {
