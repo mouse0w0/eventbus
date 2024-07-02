@@ -4,6 +4,8 @@ import java.lang.reflect.Type;
 import java.util.function.Predicate;
 
 final class ListenerWrapper {
+    public static final ListenerWrapper[] EMPTY_ARRAY = new ListenerWrapper[0];
+
     private static final Predicate<Event> ALWAYS_TRUE = event -> true;
     private static final Predicate<Event> NOT_CANCELLED = ListenerWrapper::notCancelled;
 

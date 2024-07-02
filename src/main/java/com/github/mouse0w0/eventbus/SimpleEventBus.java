@@ -67,34 +67,19 @@ public class SimpleEventBus implements EventBus {
             throw new IllegalStateException("Listener has been registered");
         }
 
-        if (target instanceof Class) {
-            registerClass((Class<?>) target);
-        } else {
-            registerObject(target);
-        }
-    }
-
-    private void registerObject(Object obj) {
-        List<ListenerWrapper> listeners = new ArrayList<>();
-        for (Method method : obj.getClass().getDeclaredMethods()) {
-            if (method.isAnnotationPresent(Listener.class) && !Modifier.isStatic(method.getModifiers())) {
-                listeners.add(registerListener(obj, method, false));
-            }
-        }
-        ownerToListeners.put(obj, listeners.toArray(new ListenerWrapper[listeners.size()]));
-    }
-
-    private void registerClass(Class<?> clazz) {
+        boolean isStatic = target.getClass() == Class.class;
+        Class<?> clazz = isStatic ? (Class<?>) target : target.getClass();
         List<ListenerWrapper> listeners = new ArrayList<>();
         for (Method method : clazz.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(Listener.class) && Modifier.isStatic(method.getModifiers())) {
-                listeners.add(registerListener(clazz, method, true));
+            Listener annotation = method.getAnnotation(Listener.class);
+            if (annotation != null && Modifier.isStatic(method.getModifiers()) == isStatic) {
+                listeners.add(registerListener(target, method, annotation, isStatic));
             }
         }
-        ownerToListeners.put(clazz, listeners.toArray(new ListenerWrapper[listeners.size()]));
+        ownerToListeners.put(target, listeners.toArray(ListenerWrapper.EMPTY_ARRAY));
     }
 
-    private ListenerWrapper registerListener(Object owner, Method method, boolean isStatic) {
+    private ListenerWrapper registerListener(Object owner, Method method, Listener listener, boolean isStatic) {
         if (method.getParameterCount() != 1) {
             throw new IllegalArgumentException(String.format("The count of listener method parameter must be 1. Listener: %s.%s(?)", method.getDeclaringClass().getName(), method.getName()));
         }
@@ -132,7 +117,6 @@ public class SimpleEventBus implements EventBus {
         } catch (Exception e) {
             throw new IllegalStateException(String.format("Failed to create listener invoker. Listener: %s.%s(%s)", method.getDeclaringClass().getName(), method.getName(), eventType.getName()));
         }
-        Listener listener = method.getAnnotation(Listener.class);
         ListenerWrapper listenerWrapper = new ListenerWrapper(eventType, genericType, listener.order(), listener.receiveCancelled(), listenerInvoker);
         getListenerList(eventType).register(listenerWrapper);
         return listenerWrapper;
