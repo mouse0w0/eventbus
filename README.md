@@ -14,7 +14,7 @@ Add the dependency
 <dependency>
     <groupId>com.github.mouse0w0</groupId>
     <artifactId>eventbus</artifactId>
-    <version>3.0.1</version>
+    <version>4.0.0</version>
 </dependency>
 ```
 ### Gradle
@@ -32,6 +32,6 @@ Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 ```gradle
 	dependencies {
-	        implementation 'com.github.mouse0w0:eventbus:3.0.1'
+	        implementation 'com.github.mouse0w0:eventbus:4.0.0'
 	}
 ```
